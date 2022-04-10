@@ -1,8 +1,17 @@
 import React, { useEffect, useState } from 'react';
+import EmployeeData from './EmployeeData';
 
 const Home = () => {
 	const [users, setUsers] = useState([]);
-	const [currUser, setCurrUser] = useState({});
+	const [currUser, setCurrUser] = useState({
+		firstName: '',
+		lastName: '',
+		dob: '',
+		designation: '',
+		profilePhoto: '',
+		experience: '',
+		id: '',
+	});
 	const [isEdit, setEdit] = useState(false);
 	const [currID, setCurrID] = useState(null);
 	const [submit, setSubmit] = useState(false);
@@ -17,27 +26,40 @@ const Home = () => {
 
 	useEffect(() => {
 		if (submit) {
-			console.log(users);
-			console.log('currUser.id', currUser.id);
-			console.log('currID', currID);
-			setUsers([
-				...users,
-				{ [currID !== null ? currID : currUser.id]: currUser },
-			]);
-			setCurrUser({
-				firstName: '',
-				lastName: '',
-				dob: '',
-				designation: '',
-				profilePhoto: '',
-				experience: '',
-				id: '',
-			});
+			if (currID != null) {
+				for (let i = 0; i < users.length; i++) {
+					if (users[i].id === +currID) {
+						users[i] = currUser;
+						setUsers([...users]);
+						break;
+					}
+				}
+			} else {
+				setUsers([
+					...users,
+					{
+						...currUser,
+					},
+				]);
+			}
+			clearField();
 			setEdit(false);
 			setCurrID(null);
 			setSubmit(false);
 		}
-	}, [currUser, submit, users]);
+	}, [currID, currUser, submit, users]);
+
+	const clearField = () => {
+		setCurrUser({
+			firstName: '',
+			lastName: '',
+			dob: '',
+			designation: '',
+			profilePhoto: '',
+			experience: '',
+			id: '',
+		});
+	};
 
 	const handleChange = (e) => {
 		e.preventDefault();
@@ -48,8 +70,6 @@ const Home = () => {
 	};
 
 	const handleSubmit = (e) => {
-		console.log('currUser');
-		console.log(currUser);
 		e.preventDefault();
 		setCurrUser({
 			...currUser,
@@ -61,16 +81,12 @@ const Home = () => {
 	const removeUser = (id) => {
 		const confirm = window.confirm();
 		if (confirm) {
-			const filteredUser = users.filter(
-				(user, index) => user[index].id != id
-			);
-			console.log(filteredUser);
+			const filteredUser = users.filter((user) => user.id !== id);
 			setUsers(filteredUser);
 		}
 	};
 
 	const handleEdit = (id, editUser) => {
-		// removeUser(id);
 		setTimeout(() => {
 			setCurrUser(editUser);
 			setEdit(true);
@@ -78,8 +94,6 @@ const Home = () => {
 		});
 	};
 
-	console.log('USERS');
-	console.log(users);
 	return (
 		<>
 			<h2 className='text-center'>Home</h2>
@@ -100,60 +114,23 @@ const Home = () => {
 				<button onClick={handleSubmit}>
 					{!isEdit ? 'Add User' : 'Update User'}
 				</button>
+				{isEdit ? (
+					<button
+						onClick={(e) => {
+							e.preventDefault();
+							clearField();
+						}}
+						style={{ marginLeft: '25px' }}
+					>
+						Cancel
+					</button>
+				) : null}
 			</form>
-			<h3>Employee List</h3>
-			<table className='tableBorder'>
-				<thead>
-					<tr>
-						<th>First Name</th>
-						<th>Last Name</th>
-						<th>DOB</th>
-						<th>Designation</th>
-						<th>Profile Photo</th>
-						<th>Experience</th>
-						<th>Remove User</th>
-						<th>Edit User</th>
-					</tr>
-				</thead>
-				<tbody>
-					{users.map((user, index) => (
-						<tr key={`emp-${index}`}>
-							<td>{user[index] && user[index].firstName}</td>
-							<td>{user[index] && user[index].lastName}</td>
-							<td>{user[index] && user[index].dob}</td>
-							<td>{user[index] && user[index].designation}</td>
-							<td>
-								<a
-									href={
-										user[index] && user[index].profilePhoto
-									}
-									target='_blank'
-									rel='noopener noreferrer'
-								>
-									{user[index] && user[index].profilePhoto}
-								</a>
-							</td>
-							<td>{user[index] && user[index].experience}</td>
-							<td>
-								<button
-									onClick={() => removeUser(user[index].id)}
-								>
-									x
-								</button>
-							</td>
-							<td>
-								<button
-									onClick={() => {
-										handleEdit(user[index].id, user[index]);
-									}}
-								>
-									Edit User
-								</button>
-							</td>
-						</tr>
-					))}
-				</tbody>
-			</table>
+			<EmployeeData
+				handleEdit={handleEdit}
+				removeUser={removeUser}
+				users={users}
+			/>
 		</>
 	);
 };
